@@ -2,6 +2,8 @@ import os
 
 from .base import *
 
+# Не редактируйте этот production файл, что не сломать наш продакшн сайт!
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
