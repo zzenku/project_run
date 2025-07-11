@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+COMPANY_NAME = 'Раз-Бег!'
+SLOGAN = 'Крылатые атлеты начинают свой разбег!'
+CONTACTS = 'Город Атлантида, улица Карла Маркса, дом 52'
+
 
 # Application definition
 
