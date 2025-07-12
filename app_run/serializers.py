@@ -27,4 +27,4 @@ class RunSerializer(ModelSerializer):
 
     class Meta:
         model = Run
-        fields = ['id', 'athlete_data', 'created_at', 'comment']
+        fields = '__all__'
