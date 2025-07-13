@@ -36,7 +36,7 @@ class UserViewSet(ReadOnlyModelViewSet):
 class RunStartView(APIView):
     def patch(self, request, run_id):
         run = get_object_or_404(Run, id=run_id)
-        if run.status == 0 and (request.data['status'] == 1 or request.data['status'] == 'in_progress'):
+        if run.status == 0 and request.data['status'] == 1:
             run.status = 1
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег начат'})
@@ -46,7 +46,7 @@ class RunStartView(APIView):
 class RunStopView(APIView):
     def patch(self, request, run_id):
         run = get_object_or_404(Run, id=run_id)
-        if run.status == 1 and (request.data['status'] == 2 or request.data['status'] == 'finished'):
+        if run.status == 1 and request.data['status'] == 2:
             run.status = 2
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
