@@ -60,3 +60,21 @@ class RunApiTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(2, self.run_2.status)
 
+    def test_run_start_string(self):
+        url = reverse('run-start', kwargs={'run_id': self.run_1.id})
+        data = {'status': 'in_progress'}
+        json_data = json.dumps(data)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        self.run_1.refresh_from_db()
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, self.run_1.status)
+
+    def test_run_stop_string(self):
+        url = reverse('run-stop', kwargs={'run_id': self.run_2.id})
+        data = {'status': 'finished'}
+        json_data = json.dumps(data)
+        response = self.client.patch(url, data=json_data, content_type='application/json')
+        self.run_2.refresh_from_db()
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(2, self.run_2.status)
+
