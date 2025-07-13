@@ -46,7 +46,7 @@ class RunApiTestCase(APITestCase):
         url = reverse('run-start', kwargs={'run_id': self.run_1.id})
         data = {'status': 'in_progress'}
         json_data = json.dumps(data)
-        response = self.client.patch(url, data=json_data, content_type='application/json')
+        response = self.client.post(url, data=json_data, content_type='application/json')
         self.run_1.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('in_progress', self.run_1.status)
@@ -55,7 +55,7 @@ class RunApiTestCase(APITestCase):
         url = reverse('run-stop', kwargs={'run_id': self.run_2.id})
         data = {'status': 'finished'}
         json_data = json.dumps(data)
-        response = self.client.patch(url, data=json_data, content_type='application/json')
+        response = self.client.post(url, data=json_data, content_type='application/json')
         self.run_2.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_2.status)
@@ -64,7 +64,7 @@ class RunApiTestCase(APITestCase):
         url = reverse('run-start', kwargs={'run_id': self.run_1.id})
         data = {'status': 'in_progress'}
         json_data = json.dumps(data)
-        response = self.client.patch(url, data=json_data, content_type='application/json')
+        response = self.client.post(url, data=json_data, content_type='application/json')
         self.run_1.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('in_progress', self.run_1.status)
@@ -73,7 +73,7 @@ class RunApiTestCase(APITestCase):
         url = reverse('run-stop', kwargs={'run_id': self.run_2.id})
         data = {'status': 'finished'}
         json_data = json.dumps(data)
-        response = self.client.patch(url, data=json_data, content_type='application/json')
+        response = self.client.post(url, data=json_data, content_type='application/json')
         self.run_2.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_2.status)
