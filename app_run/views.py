@@ -40,7 +40,7 @@ class RunStartView(APIView):
             run.status = request.data['status']
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег начат'})
-        raise ValueError
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class RunStopView(APIView):
@@ -50,7 +50,7 @@ class RunStopView(APIView):
             run.status = request.data['status']
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
-        raise ValueError
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
