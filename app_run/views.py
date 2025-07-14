@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models import Count, Case, When
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -28,7 +29,7 @@ class RunViewSet(ModelViewSet):
 
 
 class UserViewSet(ReadOnlyModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().annotate(runs_finished=Count(Case(When(run__status='finished', then=1))))
     serializer_class = UserSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
