@@ -27,7 +27,7 @@ router.register('api/users', UserViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/company_details/', company_details_view),
-    path('api/runs/<int:run_id>/start', RunStartView.as_view(), name='run-start'),
-    path('api/runs/<int:run_id>/stop', RunStopView.as_view(), name='run-stop'),
+    path('api/runs/<int:run_id>/start/', RunStartView.as_view(), name='run-start'),
+    path('api/runs/<int:run_id>/stop/', RunStopView.as_view(), name='run-stop'),
     path('', include(router.urls)),
 ]
