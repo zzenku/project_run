@@ -36,7 +36,7 @@ class UserViewSet(ReadOnlyModelViewSet):
 class RunStartView(APIView):
     def post(self, request, run_id):
         run = get_object_or_404(Run, id=run_id)
-        if run.status == 'init' and request.data.get('status') == 'in_progress':
+        if run.status == 'init':
             run.status = 'in_progress'
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег начат'})
@@ -46,7 +46,7 @@ class RunStartView(APIView):
 class RunStopView(APIView):
     def post(self, request, run_id):
         run = get_object_or_404(Run, id=run_id)
-        if run.status == 'in_progress' and request.data.get('status') == 'finished':
+        if run.status == 'in_progress':
             run.status = 'finished'
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
