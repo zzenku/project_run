@@ -70,12 +70,9 @@ class AthleteInfoView(APIView):
     def put(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         serializer = AthleteInfoSerializer(data=request.data)
-        print("Incoming data:", request.data)
         if serializer.is_valid():
-            print(serializer.validated_data)
             AthleteInfo.objects.update_or_create(user_id=user, defaults=serializer.validated_data)
             return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
-        print("Validation errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, user_id):
