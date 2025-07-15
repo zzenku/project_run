@@ -69,19 +69,20 @@ class RunStopView(APIView):
 class AthleteInfoView(APIView):
     def put(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
-        serializer_data = AthleteInfoSerializer(data=request.data)
+        serializer = AthleteInfoSerializer(data=request.data)
         print("Incoming data:", request.data)
-        print("Validation errors:", serializer_data.errors)
-        if serializer_data.is_valid():
-            AthleteInfo.objects.update_or_create(user_id=user, defaults=serializer_data.validated_data)
+        if serializer.is_valid():
+            print(serializer.validated_data)
+            AthleteInfo.objects.update_or_create(user_id=user, defaults=serializer.validated_data)
             return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'Некорректные данные'})
+        print("Validation errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         info, created = AthleteInfo.objects.get_or_create(user_id=user, defaults={'weight': 0, 'goals': ''})
         serializer_data = AthleteInfoSerializer(info).data
-        return Response(serializer_data.errors, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data=serializer_data)
 
 
 @api_view(['GET'])
