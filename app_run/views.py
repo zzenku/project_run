@@ -79,9 +79,7 @@ class AthleteInfoView(APIView):
 
     def get(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
-        info, created = AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
-        if created:
-            return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
+        AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
         return Response(status=status.HTTP_200_OK, data={'message': 'Успешно'})
 
 
