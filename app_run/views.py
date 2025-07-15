@@ -72,7 +72,7 @@ class AthleteInfoView(APIView):
         weight = request.data.get('weight')
         goals = request.data.get('goals')
 
-        if weight in range(900):
+        if 0 < weight < 900:
             AthleteInfo.objects.update_or_create(user_id=user, defaults={'weight': weight, 'goals': goals})
             return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'Некорректные данные'})
