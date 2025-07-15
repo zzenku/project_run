@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from app_run.models import Run, AthleteInfo
-from app_run.serializers import RunSerializer, UserSerializer
+from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -79,8 +79,9 @@ class AthleteInfoView(APIView):
 
     def get(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
-        AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
-        return Response(status=status.HTTP_200_OK, data={'message': 'Успешно'})
+        info, created = AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
+        serializer_data = AthleteInfoSerializer(info).data
+        return Response(status=status.HTTP_200_OK, data=serializer_data)
 
 
 @api_view(['GET'])

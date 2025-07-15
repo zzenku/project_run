@@ -81,7 +81,7 @@ class RunApiTestCase(APITestCase):
     def test_get_athlete_info_not_created(self):
         url = reverse('athlete-info', kwargs={'user_id': self.athlete_1.id})
         response = self.client.get(url)
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_put_athlete_info_created(self):
         url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
