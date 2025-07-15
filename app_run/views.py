@@ -79,7 +79,7 @@ class AthleteInfoView(APIView):
 
     def get(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
-        info, created = AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
+        info, created = AthleteInfo.objects.get_or_create(user_id=user, defaults={'weight': 0, 'goals': ''})
         serializer_data = AthleteInfoSerializer(info).data
         return Response(status=status.HTTP_200_OK, data=serializer_data)
 
