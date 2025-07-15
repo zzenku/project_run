@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from app_run.models import Run, AthleteInfo
+from app_run.models import Run, AthleteInfo, Challenge
 
 
 class UserSerializer(ModelSerializer):
@@ -42,3 +42,9 @@ class AthleteInfoSerializer(ModelSerializer):
         if 0 < value < 900:
             return value
         raise serializers.ValidationError('Недопустимое значение')
+
+
+class ChallengeSerializer(ModelSerializer):
+    class Meta:
+        model = Challenge
+        fields = ['full_name', 'athlete']

@@ -11,8 +11,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from app_run.models import Run, AthleteInfo
-from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer
+from app_run.models import Run, AthleteInfo, Challenge
+from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -62,6 +62,9 @@ class RunStopView(APIView):
         if run.status == 'in_progress':
             run.status = 'finished'
             run.save()
+            if Run.objects.filter(athlete=run.athlete, status='finished').count() == 10 and not Challenge.objects.filter(
+                    athlete=run.athlete, full_name='Сделай 10 Забегов!').exists():
+                Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,6 +83,16 @@ class AthleteInfoView(APIView):
         info, created = AthleteInfo.objects.get_or_create(user_id=user, defaults={'weight': 0, 'goals': ''})
         serializer_data = AthleteInfoSerializer(info).data
         return Response(status=status.HTTP_200_OK, data=serializer_data)
+
+
+@api_view(['GET'])
+def show_challenges(request):
+    challenges = Challenge.objects.all()
+    athlete = request.GET.get('athlete')
+    if athlete:
+        challenges = challenges.filter(athlete=athlete)
+    serializer_data = ChallengeSerializer(challenges, many=True).data
+    return Response(serializer_data)
 
 
 @api_view(['GET'])
