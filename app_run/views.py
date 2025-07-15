@@ -69,11 +69,9 @@ class RunStopView(APIView):
 class AthleteInfoView(APIView):
     def put(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
-        weight = request.data.get('weight')
-        goals = request.data.get('goals')
-
-        if 0 < int(weight) < 900:
-            AthleteInfo.objects.update_or_create(user_id=user, defaults={'weight': weight, 'goals': goals})
+        serializer_data = AthleteInfoSerializer(data=request.data)
+        if serializer_data.is_valid():
+            AthleteInfo.objects.update_or_create(user_id=user, defaults=serializer_data.validated_data)
             return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'Некорректные данные'})
 
