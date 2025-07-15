@@ -70,6 +70,8 @@ class AthleteInfoView(APIView):
     def put(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         serializer_data = AthleteInfoSerializer(data=request.data)
+        print("Incoming data:", request.data)
+        print("Validation errors:", serializer_data.errors)
         if serializer_data.is_valid():
             AthleteInfo.objects.update_or_create(user_id=user, defaults=serializer_data.validated_data)
             return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
@@ -79,7 +81,7 @@ class AthleteInfoView(APIView):
         user = get_object_or_404(User, id=user_id)
         info, created = AthleteInfo.objects.get_or_create(user_id=user, defaults={'weight': 0, 'goals': ''})
         serializer_data = AthleteInfoSerializer(info).data
-        return Response(status=status.HTTP_200_OK, data=serializer_data)
+        return Response(serializer_data.errors, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
