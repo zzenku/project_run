@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app_run.models import Run, AthleteInfo
-from app_run.serializers import RunSerializer, UserSerializer
+from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer
 
 
 class RunApiTestCase(APITestCase):
@@ -81,7 +81,7 @@ class RunApiTestCase(APITestCase):
     def test_get_athlete_info_not_created(self):
         url = reverse('athlete-info', kwargs={'user_id': self.athlete_1.id})
         response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200, response.status_code)
 
     def test_put_athlete_info_created(self):
         url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
@@ -96,6 +96,7 @@ class RunApiTestCase(APITestCase):
             'weight': self.athlete_2_info.weight,
             'goals': self.athlete_2_info.goals
         }
+        serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
         self.assertEqual(data, expected_data)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
@@ -112,5 +113,22 @@ class RunApiTestCase(APITestCase):
             'weight': info.weight,
             'goals': info.goals
         }
+        self.assertEqual(data, expected_data)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+    def test_weight_type_error(self):
+        url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
+        data = {
+            'weight': 'abc',
+            'goals': 'Хочу быть сильным'
+        }
+        json_data = json.dumps(data)
+        response = self.client.put(url, data=json_data, content_type='application/json')
+        self.athlete_2_info.refresh_from_db()
+        expected_data = {
+            'weight': self.athlete_2_info.weight,
+            'goals': self.athlete_2_info.goals
+        }
+        serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
         self.assertEqual(data, expected_data)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
