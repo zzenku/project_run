@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from app_run.models import Run
+from app_run.models import Run, AthleteInfo
 from app_run.serializers import RunSerializer, UserSerializer
 
 
@@ -64,6 +64,25 @@ class RunStopView(APIView):
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class AthleteInfoView(APIView):
+    def put(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        weight = request.data.get('weight')
+        goals = request.data.get('goals')
+
+        if weight in range(0, 900):
+            AthleteInfo.objects.update_or_create(user_id=user, defaults={'weight': weight, 'goals': goals})
+            return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'Некорректные данные'})
+
+    def get(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        info, created = AthleteInfo.objects.get_or_create(user_id=user, weight=0, goals='')
+        if created:
+            return Response(status=status.HTTP_201_CREATED, data={'message': 'Данные успешно добавлены'})
+        return Response(status=status.HTTP_200_OK, data={'message': 'Успешно'})
 
 
 @api_view(['GET'])

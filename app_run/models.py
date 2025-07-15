@@ -20,3 +20,9 @@ class Run(models.Model):
 
     def __str__(self):
         return f'Забег {self.id}: {self.status}'
+
+
+class AthleteInfo(models.Model):
+    weight = models.IntegerField(null=True)
+    goals = models.CharField(max_length=1024, null=True, blank=True)
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE)

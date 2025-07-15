@@ -76,10 +76,11 @@ class UserSerializerTestCase(TestCase):
         self.run_8 = Run.objects.create(athlete=self.athlete_3, status='finished')
         self.run_9 = Run.objects.create(athlete=self.athlete_3, status='finished')
 
-        users = User.objects.all().annotate(runs_finished=Count(Case(When(run__status='finished', then=1)))).order_by('id')
+        users = User.objects.all().annotate(runs_finished=Count(Case(When(run__status='finished', then=1))))
         data = UserSerializer(users, many=True).data
         expected_data = [
             {
+                'id': 1,
                 'date_joined': data[0]['date_joined'],
                 'username': self.athlete_1.username,
                 'last_name': 'Sidorov',
@@ -88,6 +89,7 @@ class UserSerializerTestCase(TestCase):
                 'runs_finished': 1
             },
             {
+                'id': 2,
                 'date_joined': data[1]['date_joined'],
                 'username': self.athlete_2.username,
                 'last_name': 'Petrov',
@@ -96,6 +98,7 @@ class UserSerializerTestCase(TestCase):
                 'runs_finished': 2
             },
             {
+                'id': 3,
                 'date_joined': data[2]['date_joined'],
                 'username': self.athlete_3.username,
                 'last_name': 'Ivanov',

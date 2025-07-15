@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from app_run.models import Run
+from app_run.models import Run, AthleteInfo
 
 
 class UserSerializer(ModelSerializer):
