@@ -11,9 +11,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
     PositionSerializer
+from geopy.distance import geodesic
 
 
 class RunUserPagination(PageNumberPagination):
@@ -70,10 +72,11 @@ class RunStopView(APIView):
         if run.status == 'in_progress':
             run.status = 'finished'
             run.save()
-            if Run.objects.filter(athlete=run.athlete,
-                                  status='finished').count() == 10 and not Challenge.objects.filter(
+            if Run.objects.filter(athlete=run.athlete,status='finished').count() == 10 and not Challenge.objects.filter(
                     athlete=run.athlete, full_name='Сделай 10 Забегов!').exists():
                 Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
+            run.distance = calculate_distance(run)
+            run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

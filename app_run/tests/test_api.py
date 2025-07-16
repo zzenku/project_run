@@ -1,11 +1,14 @@
 from django.contrib.auth.models import User
 from django.db.models import Count, Case, When
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from app_run.models import Run, AthleteInfo, Challenge
+from app_run.distance import calculate_distance
+from app_run.models import Run, AthleteInfo, Challenge, Position
 from app_run.serializers import RunSerializer, UserSerializer, ChallengeSerializer
+from geopy.distance import geodesic
 
 
 class RunApiTestCase(APITestCase):
@@ -151,7 +154,6 @@ class ChallengeApiTestCase(APITestCase):
         self.challenge_2 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_2)
         self.challenge_3 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_3)
 
-
     def test_complete_challenge_10(self):
         url = reverse('run-stop', kwargs={'run_id': self.run_10.id})
         response = self.client.post(url, content_type='application/json')
@@ -167,4 +169,22 @@ class ChallengeApiTestCase(APITestCase):
         serializer_data = ChallengeSerializer([self.challenge_1, self.challenge_2, self.challenge_3], many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
+
+
+class LogicTestCase(TestCase):
+    def test_distance(self):
+        athlete = User.objects.create(username='us', first_name='Ivan', last_name='Ivanov')
+        run_1 = Run.objects.create(athlete=athlete, status='in_progress')
+        test_pos_1 = Position.objects.create(run=run_1, latitude=12, longitude=50)
+        test_pos_2 = Position.objects.create(run=run_1, latitude=12.10, longitude=50.05)
+        test_pos_3 = Position.objects.create(run=run_1, latitude=12.20, longitude=50.1)
+        test_pos_4 = Position.objects.create(run=run_1, latitude=12.30, longitude=50.15)
+
+        d = 0
+        d += geodesic([test_pos_1.latitude, test_pos_1.longitude], [test_pos_2.latitude, test_pos_2.longitude]).km
+        d += geodesic([test_pos_2.latitude, test_pos_2.longitude], [test_pos_3.latitude, test_pos_3.longitude]).km
+        d += geodesic([test_pos_3.latitude, test_pos_3.longitude], [test_pos_4.latitude, test_pos_4.longitude]).km
+
+        self.assertEqual(d, calculate_distance(run_1))
+
 
