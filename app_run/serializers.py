@@ -59,12 +59,15 @@ class PositionSerializer(ModelSerializer):
             raise serializers.ValidationError('Забег не запущен')
         return value
 
-    def validate(self, data):
-        latitude = data['latitude']
-        longitude = data['longitude']
-        if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
-            raise serializers.ValidationError('Недопустимое значение координат')
-        return data
+    def validate_latitude(self, value):
+        if not (-90 <= value <= 90):
+            raise serializers.ValidationError('Недопустимое значение широты')
+        return value
+
+    def validate_longitude(self, value):
+        if not (-180 <= value <= 180):
+            raise serializers.ValidationError('Недопустимое значение долготы')
+        return value
 
 
 
