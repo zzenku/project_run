@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
@@ -54,7 +52,7 @@ class ChallengeSerializer(ModelSerializer):
 class PositionSerializer(ModelSerializer):
     class Meta:
         model = Position
-        fields = ['run', 'latitude', 'longitude']
+        fields = '__all__'
 
     def validate_run(self, value):
         if value.status != 'in_progress':
