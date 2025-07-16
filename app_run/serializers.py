@@ -1,9 +1,10 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
-
-from app_run.models import Run, AthleteInfo, Challenge
+from app_run.models import Run, AthleteInfo, Challenge, Position
 
 
 class UserSerializer(ModelSerializer):
@@ -48,3 +49,25 @@ class ChallengeSerializer(ModelSerializer):
     class Meta:
         model = Challenge
         fields = ['full_name', 'athlete']
+
+
+class PositionSerializer(ModelSerializer):
+    class Meta:
+        model = Position
+        fields = ['run', 'latitude', 'longitude']
+
+    def validate_run(self, value):
+        if value.status != 'in_progress':
+            raise serializers.ValidationError('Забег не запущен')
+        return value
+
+    def validate(self, data):
+        latitude = data['latitude']
+        longitude = data['longitude']
+        if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+            raise serializers.ValidationError('Недопустимое значение координат')
+        return data
+
+
+
+

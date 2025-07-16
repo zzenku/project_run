@@ -11,8 +11,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from app_run.models import Run, AthleteInfo, Challenge
-from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer
+from app_run.models import Run, AthleteInfo, Challenge, Position
+from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
+    PositionSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -26,6 +27,13 @@ class RunViewSet(ModelViewSet):
     filterset_fields = ['status', 'athlete']
     ordering_fields = ['created_at']
     pagination_class = RunUserPagination
+
+
+class PositionViewSet(ModelViewSet):
+    queryset = Position.objects.all()
+    serializer_class = PositionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['run']
 
 
 class UserViewSet(ReadOnlyModelViewSet):
@@ -62,7 +70,8 @@ class RunStopView(APIView):
         if run.status == 'in_progress':
             run.status = 'finished'
             run.save()
-            if Run.objects.filter(athlete=run.athlete, status='finished').count() == 10 and not Challenge.objects.filter(
+            if Run.objects.filter(athlete=run.athlete,
+                                  status='finished').count() == 10 and not Challenge.objects.filter(
                     athlete=run.athlete, full_name='Сделай 10 Забегов!').exists():
                 Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
