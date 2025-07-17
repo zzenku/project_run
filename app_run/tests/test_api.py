@@ -140,33 +140,32 @@ class ChallengeApiTestCase(APITestCase):
         self.athlete = User.objects.create(username='us1', first_name='Ivan', last_name='Ivanov')
         self.athlete_2 = User.objects.create(username='us2', first_name='Ivan', last_name='Sidorov')
         self.athlete_3 = User.objects.create(username='us3', first_name='Ivan', last_name='Govnov')
-        self.run_1 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_2 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_3 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_4 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_5 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_6 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_7 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_8 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_9 = Run.objects.create(athlete=self.athlete, status='finished')
-        self.run_10 = Run.objects.create(athlete=self.athlete, status='in_progress')
-        self.challenge_1 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete)
+        for _ in range(9):
+            Run.objects.create(athlete=self.athlete, status='finished', distance=5)
+        self.run_10 = Run.objects.create(athlete=self.athlete, status='in_progress', distance=6)
         self.challenge_2 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_2)
         self.challenge_3 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_3)
 
     def test_complete_challenge_10(self):
         url = reverse('run-stop', kwargs={'run_id': self.run_10.id})
-        response = self.client.post(url, content_type='application/json')
+        response = self.client.post(url)
         self.run_10.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_10.status)
-        challenge = Challenge.objects.last().full_name
-        self.assertEqual('Сделай 10 Забегов!', challenge)
+        self.assertEqual('Сделай 10 Забегов!', Challenge.objects.filter(athlete=self.athlete)[0].full_name)
+
+    def test_complete_challenge_50km(self):
+        url = reverse('run-stop', kwargs={'run_id': self.run_10.id})
+        response = self.client.post(url)
+        self.run_10.refresh_from_db()
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual('finished', self.run_10.status)
+        self.assertEqual('Пробеги 50 километров!', Challenge.objects.filter(athlete=self.athlete)[1].full_name)
 
     def test_get_challenges(self):
         url = reverse('challenge-list')
         response = self.client.get(url)
-        serializer_data = ChallengeSerializer([self.challenge_1, self.challenge_2, self.challenge_3], many=True).data
+        serializer_data = ChallengeSerializer([self.challenge_2, self.challenge_3], many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
 

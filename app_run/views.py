@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When
+from django.db.models import Count, Case, When, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -15,7 +15,6 @@ from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
     PositionSerializer
-from geopy.distance import geodesic
 
 
 class RunUserPagination(PageNumberPagination):
@@ -72,9 +71,16 @@ class RunStopView(APIView):
         if run.status == 'in_progress':
             run.status = 'finished'
             run.save()
-            if Run.objects.filter(athlete=run.athlete,status='finished').count() == 10 and not Challenge.objects.filter(
-                    athlete=run.athlete, full_name='Сделай 10 Забегов!').exists():
+            finished_runs = Run.objects.filter(athlete=run.athlete,
+                                               status='finished')
+            if finished_runs.aggregate(Count('id')).get('id__count') == 10 and not Challenge.objects.filter(
+                    athlete=run.athlete,
+                    full_name='Сделай 10 Забегов!').exists():
                 Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
+            if finished_runs.aggregate(Sum('distance')).get('distance__sum') >= 50 and not Challenge.objects.filter(
+                    athlete=run.athlete,
+                    full_name='Пробеги 50 километров!').exists():
+                Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
             run.distance = calculate_distance(run)
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
