@@ -134,7 +134,7 @@ def upload_collectible_items(request):
         else:
             invalid_rows.append([i.value for i in row])
 
-    return Response(status=status.HTTP_200_OK, data={'invalid_rows': invalid_rows})
+    return Response(status=status.HTTP_200_OK, data=invalid_rows)
 
 
 @api_view(['GET'])
