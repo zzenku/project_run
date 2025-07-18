@@ -142,7 +142,7 @@ class ChallengeApiTestCase(APITestCase):
         self.athlete_3 = User.objects.create(username='us3', first_name='Ivan', last_name='Govnov')
         for _ in range(9):
             Run.objects.create(athlete=self.athlete, status='finished', distance=5)
-        self.run_10 = Run.objects.create(athlete=self.athlete, status='in_progress', distance=6)
+        self.run_10 = Run.objects.create(athlete=self.athlete, status='in_progress', distance=5)
         self.challenge_2 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_2)
         self.challenge_3 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_3)
 
@@ -160,7 +160,7 @@ class ChallengeApiTestCase(APITestCase):
         self.run_10.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_10.status)
-        self.assertEqual('Пробеги 50 километров!', Challenge.objects.filter(athlete=self.athlete)[1].full_name)
+        self.assertTrue(Challenge.objects.filter(athlete=self.athlete, full_name='Пробеги 50 километров!').exists())
 
     def test_get_challenges(self):
         url = reverse('challenge-list')

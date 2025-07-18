@@ -70,9 +70,9 @@ class RunStopView(APIView):
         run = get_object_or_404(Run, id=run_id)
         if run.status == 'in_progress':
             run.status = 'finished'
+            run.distance = calculate_distance(run)
             run.save()
-            finished_runs = Run.objects.filter(athlete=run.athlete,
-                                               status='finished')
+            finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             if finished_runs.aggregate(Count('id')).get('id__count') == 10 and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='Сделай 10 Забегов!').exists():
@@ -81,8 +81,6 @@ class RunStopView(APIView):
                     athlete=run.athlete,
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
-            run.distance = calculate_distance(run)
-            run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

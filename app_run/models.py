@@ -33,6 +33,9 @@ class Challenge(models.Model):
     full_name = models.CharField(max_length=255, blank=False, null=False)
     athlete = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.athlete}: {self.full_name}'
+
 
 class Position(models.Model):
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
