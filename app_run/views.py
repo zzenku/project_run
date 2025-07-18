@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Case, When, Sum
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -12,9 +13,9 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from app_run.distance import calculate_distance
-from app_run.models import Run, AthleteInfo, Challenge, Position
+from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
-    PositionSerializer
+    PositionSerializer, CollectibleItemSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -99,6 +100,41 @@ class AthleteInfoView(APIView):
         info, created = AthleteInfo.objects.get_or_create(user_id=user, defaults={'weight': 0, 'goals': ''})
         serializer_data = AthleteInfoSerializer(info).data
         return Response(status=status.HTTP_200_OK, data=serializer_data)
+
+
+@api_view(['GET'])
+def show_collectible_items(request):
+    return Response(CollectibleItemSerializer(CollectibleItem.objects.all(), many=True).data)
+
+
+@api_view(['POST'])
+def upload_collectible_items(request):
+    file = request.FILES.get('file')
+    if not file:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Файл не передан'})
+
+    xl = load_workbook(file)
+    active_list = xl.active
+
+    invalid_rows = []
+
+    for row in active_list.iter_rows(min_row=2):
+        row_data = {
+            'name': row[0].value,
+            'uid': row[1].value,
+            'value': row[2].value,
+            'latitude': row[3].value,
+            'longitude': row[4].value,
+            'picture': row[5].value
+        }
+
+        serializer = CollectibleItemSerializer(data=row_data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            invalid_rows.append([i.value for i in row])
+
+    return Response(status=status.HTTP_200_OK, data={'invalid_rows': invalid_rows})
 
 
 @api_view(['GET'])
