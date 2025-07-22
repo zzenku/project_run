@@ -36,7 +36,7 @@ class UserSerializer(ModelSerializer):
 
 
 class UserDetailSerializer(UserSerializer):
-    items = CollectibleItemSerializer(read_only=True, source='items', many=True)
+    items = CollectibleItemSerializer(read_only=True, many=True)
 
     class Meta:
         model = User
