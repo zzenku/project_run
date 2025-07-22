@@ -15,7 +15,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
-    PositionSerializer, CollectibleItemSerializer
+    PositionSerializer, CollectibleItemSerializer, UserDetailSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -46,6 +46,13 @@ class UserViewSet(ReadOnlyModelViewSet):
     ordering_fields = ['date_joined']
     pagination_class = RunUserPagination
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return UserSerializer
+        elif self.action == 'retrieve':
+            return UserDetailSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
         qs = self.queryset
         type = self.request.query_params.get('type', None)
@@ -74,11 +81,12 @@ class RunStopView(APIView):
             run.distance = calculate_distance(run)
             run.save()
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
-            if finished_runs.aggregate(Count('id')).get('id__count') == 10 and not Challenge.objects.filter(
+            finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
+            if finished_runs_data.get('id__count') == 10 and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='Сделай 10 Забегов!').exists():
                 Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
-            if finished_runs.aggregate(Sum('distance')).get('distance__sum') >= 50 and not Challenge.objects.filter(
+            if finished_runs_data.get('distance__sum') >= 50 and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)

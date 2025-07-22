@@ -1,14 +1,16 @@
+import json
+
 from django.contrib.auth.models import User
 from django.db.models import Count, Case, When
 from django.test import TestCase
 from django.urls import reverse
+from geopy.distance import geodesic
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app_run.distance import calculate_distance
-from app_run.models import Run, AthleteInfo, Challenge, Position
+from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
 from app_run.serializers import RunSerializer, UserSerializer, ChallengeSerializer
-from geopy.distance import geodesic
 
 
 class RunApiTestCase(APITestCase):
@@ -186,4 +188,22 @@ class LogicTestCase(TestCase):
 
         self.assertEqual(d, calculate_distance(run_1))
 
+
+class PositionCollectibleTestCase(TestCase):
+    def test_collectible_items_added(self):
+        athlete = User.objects.create(username='us', first_name='Ivan', last_name='Ivanov')
+
+        item = CollectibleItem.objects.create(name='col_item', uid='abcd1234', latitude=20, longitude=20,
+                                              picture='https://info.traceparts.com/wp-content/uploads/2024/01/item-logo-without-background-2.png',
+                                              value=2)
+        run = Run.objects.create(athlete=athlete, status='in_progress')
+        test_pos_1 = Position.objects.create(run=run, latitude=10, longitude=10)
+        test_pos_2 = Position.objects.create(run=run, latitude=12, longitude=12)
+        test_pos_3 = Position.objects.create(run=run, latitude=14, longitude=14)
+        url = reverse('position-list')
+        data = {'run': run.id, 'latitude': 20, 'longitude': 20}
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(athlete.items.last(), item)
 
