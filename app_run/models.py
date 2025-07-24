@@ -18,6 +18,7 @@ class Run(models.Model):
     comment = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_INIT)
     distance = models.DecimalField(max_digits=20, decimal_places=4, default=0)
+    run_time_seconds = models.IntegerField(default=0)
 
     def __str__(self):
         return f'Забег {self.id}: {self.status}'
@@ -41,6 +42,7 @@ class Position(models.Model):
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
     latitude = models.DecimalField(decimal_places=4, max_digits=6)
     longitude = models.DecimalField(decimal_places=4, max_digits=7)
+    date_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.run}, lat: {self.latitude} long: {self.longitude}'

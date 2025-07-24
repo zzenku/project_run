@@ -76,9 +76,11 @@ class ChallengeSerializer(ModelSerializer):
 
 
 class PositionSerializer(ModelSerializer):
+    date_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S.%f')
+
     class Meta:
         model = Position
-        fields = '__all__'
+        fields = ['run', 'latitude', 'longitude', 'date_time']
 
     def create(self, validated_data):
         athlete_position = [validated_data.get('latitude'), validated_data.get('longitude')]

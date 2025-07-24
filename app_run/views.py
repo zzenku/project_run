@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When, Sum
+from django.db.models import Count, Case, When, Sum, Max, Min
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from openpyxl import load_workbook
@@ -90,6 +90,9 @@ class RunStopView(APIView):
                     athlete=run.athlete,
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
+            duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
+            run.run_time_seconds = int((duration['max_date']-duration['min_date']).seconds)
+            run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

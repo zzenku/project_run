@@ -1,4 +1,5 @@
 import json
+import time
 
 from django.contrib.auth.models import User
 from django.db.models import Count, Case, When
@@ -21,6 +22,14 @@ class RunApiTestCase(APITestCase):
         self.run_1 = Run.objects.create(athlete=self.athlete_1, status='init')
         self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress')
         self.run_3 = Run.objects.create(athlete=self.athlete_3, status='init')
+        self.run_4 = Run.objects.create(athlete=self.athlete_3, status='in_progress')
+        self.position_1 = Position.objects.create(run=self.run_4, latitude=0, longitude=0)
+        time.sleep(2)
+        self.position_2 = Position.objects.create(run=self.run_4, latitude=1, longitude=1)
+        time.sleep(2)
+        self.position_3 = Position.objects.create(run=self.run_4, latitude=2, longitude=2)
+        time.sleep(2)
+        self.position_4 = Position.objects.create(run=self.run_4, latitude=3, longitude=3)
         self.athlete_2_info = AthleteInfo.objects.create(user_id=self.athlete_2, weight=0, goals='')
 
     def test_get_runs(self):
@@ -75,6 +84,13 @@ class RunApiTestCase(APITestCase):
         self.run_2.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_2.status)
+
+    def test_time_run(self):
+        url = reverse('run-stop', kwargs={'run_id': self.run_4.id})
+        response = self.client.post(url, content_type='application/json')
+        self.run_4.refresh_from_db()
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertTrue(5 <= self.run_4.run_time_seconds <= 7)
 
     # def test_get_athlete_info_created(self):
     #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
