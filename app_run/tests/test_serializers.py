@@ -11,10 +11,9 @@ class RunSerializerTestCase(TestCase):
         self.athlete_1 = User.objects.create(username='us1', first_name='Ivan', last_name='Sidorov')
         self.athlete_2 = User.objects.create(username='us2', first_name='Petr', last_name='Petrov')
         self.athlete_3 = User.objects.create(username='us3', first_name='Sidor', last_name='Ivanov')
-        self.run_1 = Run.objects.create(athlete=self.athlete_1, status='init')
-        self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress')
-        self.run_3 = Run.objects.create(athlete=self.athlete_3, status='finished')
-
+        self.run_1 = Run.objects.create(athlete=self.athlete_1, status='init', run_time_seconds=0)
+        self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress', run_time_seconds=0)
+        self.run_3 = Run.objects.create(athlete=self.athlete_3, status='finished', run_time_seconds=0)
         runs = Run.objects.all().select_related('athlete').order_by('id')
         data = RunSerializer(runs, many=True).data
         expected_data = [
@@ -29,7 +28,9 @@ class RunSerializerTestCase(TestCase):
                 'created_at': data[0]['created_at'],
                 'comment': '',
                 'status': 'init',
-                'athlete': self.athlete_1.id
+                'distance': '0.0000',
+                'run_time_seconds': 0,
+                'athlete': self.athlete_1.id,
             },
             {
                 'id': self.run_2.id,
@@ -42,7 +43,9 @@ class RunSerializerTestCase(TestCase):
                 'created_at': data[1]['created_at'],
                 'comment': '',
                 'status': 'in_progress',
-                'athlete': self.athlete_2.id
+                'distance': '0.0000',
+                'run_time_seconds': 0,
+                'athlete': self.athlete_2.id,
             },
             {
                 'id': self.run_3.id,
@@ -55,9 +58,14 @@ class RunSerializerTestCase(TestCase):
                 'created_at': data[2]['created_at'],
                 'comment': '',
                 'status': 'finished',
-                'athlete': self.athlete_3.id
+                'distance': '0.0000',
+                'run_time_seconds': 0,
+                'athlete': self.athlete_3.id,
+
             }
         ]
+        print(data)
+        print('\n', expected_data)
         self.assertEqual(data, expected_data)
 
 
@@ -67,14 +75,14 @@ class UserSerializerTestCase(TestCase):
         self.athlete_2 = User.objects.create(username='us2', first_name='Petr', last_name='Petrov')
         self.athlete_3 = User.objects.create(username='us3', first_name='Sidor', last_name='Ivanov')
         self.run_1 = Run.objects.create(athlete=self.athlete_1, status='init')
-        self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress')
-        self.run_3 = Run.objects.create(athlete=self.athlete_1, status='in_progress')
-        self.run_4 = Run.objects.create(athlete=self.athlete_1, status='finished')
-        self.run_5 = Run.objects.create(athlete=self.athlete_2, status='finished')
-        self.run_6 = Run.objects.create(athlete=self.athlete_2, status='finished')
-        self.run_7 = Run.objects.create(athlete=self.athlete_3, status='finished')
-        self.run_8 = Run.objects.create(athlete=self.athlete_3, status='finished')
-        self.run_9 = Run.objects.create(athlete=self.athlete_3, status='finished')
+        self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress', distance=0, run_time_seconds=0)
+        self.run_3 = Run.objects.create(athlete=self.athlete_1, status='in_progress', distance=0, run_time_seconds=0)
+        self.run_4 = Run.objects.create(athlete=self.athlete_1, status='finished', distance=0, run_time_seconds=0)
+        self.run_5 = Run.objects.create(athlete=self.athlete_2, status='finished', distance=0, run_time_seconds=0)
+        self.run_6 = Run.objects.create(athlete=self.athlete_2, status='finished', distance=0, run_time_seconds=0)
+        self.run_7 = Run.objects.create(athlete=self.athlete_3, status='finished', distance=0, run_time_seconds=0)
+        self.run_8 = Run.objects.create(athlete=self.athlete_3, status='finished', distance=0, run_time_seconds=0)
+        self.run_9 = Run.objects.create(athlete=self.athlete_3, status='finished', distance=0, run_time_seconds=0)
 
         users = User.objects.all().annotate(runs_finished=Count(Case(When(run__status='finished', then=1))))
         data = UserSerializer(users, many=True).data
@@ -107,5 +115,4 @@ class UserSerializerTestCase(TestCase):
                 'runs_finished': 3
             }
         ]
-        print(data)
         self.assertEqual(data, expected_data)
