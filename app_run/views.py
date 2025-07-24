@@ -91,7 +91,7 @@ class RunStopView(APIView):
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
             duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
-            run.run_time_seconds = int((duration['max_date']-duration['min_date']).seconds)
+            run.run_time_seconds = int((duration.get('max_date')-duration.get('min_date')).seconds)
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
