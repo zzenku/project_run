@@ -39,7 +39,7 @@ class PositionViewSet(ModelViewSet):
 
 
 class UserViewSet(ReadOnlyModelViewSet):
-    queryset = User.objects.all().annotate(runs_finished=Count('id'), filter=Q(run__status='finished'))
+    queryset = User.objects.all().annotate(runs_finished=Count('run', filter=Q(run__status='finished')))
     serializer_class = UserSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
