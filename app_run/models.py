@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
 class Run(models.Model):
@@ -42,7 +43,7 @@ class Position(models.Model):
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
     latitude = models.DecimalField(decimal_places=4, max_digits=6)
     longitude = models.DecimalField(decimal_places=4, max_digits=7)
-    date_time = models.DateTimeField(auto_now_add=True)
+    date_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f'{self.run}, lat: {self.latitude} long: {self.longitude}'
