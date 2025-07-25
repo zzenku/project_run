@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -61,7 +61,8 @@ class PositionViewSet(ModelViewSet):
                 speed = Decimal('0.00')
         else:
             distance, speed = Decimal('0.0000'), Decimal('0.00')
-        serializer.save(distance=round(distance, 4), speed=round(speed, 2))
+        serializer.save(distance=distance.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP),
+                        speed=speed.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
 class UserViewSet(ReadOnlyModelViewSet):
