@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Sum, Max, Min, Q
+from django.db.models import Count, Sum, Max, Min, Q, Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from geopy.distance import geodesic
 from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -36,6 +37,23 @@ class PositionViewSet(ModelViewSet):
     serializer_class = PositionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['run']
+
+    def perform_create(self, serializer):
+        run = serializer.validated_data['run']
+        positions = Position.objects.filter(run=run)
+        if positions.count() > 0:
+            previous_position = Position.objects.latest('date_time')
+            distance_previous_to_current = geodesic([previous_position.latitude, previous_position.longitude],
+                                                    [serializer.validated_data['latitude'],
+                                                     serializer.validated_data['longitude']]).m
+            previous_time = previous_position.date_time
+            last_time = serializer.validated_data['date_time']
+            distance = previous_position.distance + distance_previous_to_current
+            time = (last_time - previous_time).total_seconds()
+            speed = distance_previous_to_current / time if time != 0 or distance != 0 else 0.00
+        else:
+            distance, speed = 0, 0.00
+        serializer.save(distance=round(distance, 4), speed=round(speed, 2))
 
 
 class UserViewSet(ReadOnlyModelViewSet):
@@ -93,8 +111,11 @@ class RunStopView(APIView):
             duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
             if duration['max_date'] and duration['min_date']:
                 run.run_time_seconds = int((duration['max_date'] - duration['min_date']).total_seconds())
+                avg_speed = Position.objects.filter(run=run).aggregate(avg_speed=Avg('speed'))['avg_speed']
+                run.speed = round(avg_speed, 2) if avg_speed else 0
             else:
                 run.run_time_seconds = 0
+                run.speed = 0
             run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
