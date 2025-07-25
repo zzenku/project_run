@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Count, Sum, Max, Min, Q, Avg
@@ -48,7 +50,7 @@ class PositionViewSet(ModelViewSet):
                                                      serializer.validated_data['longitude']]).m
             previous_time = previous_position.date_time
             last_time = serializer.validated_data['date_time']
-            distance = previous_position.distance + distance_previous_to_current
+            distance = previous_position.distance + Decimal(distance_previous_to_current)
             time = (last_time - previous_time).total_seconds()
             speed = distance_previous_to_current / time if time != 0 or distance != 0 else 0.00
         else:
