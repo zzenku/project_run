@@ -42,19 +42,20 @@ class PositionViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         run = serializer.validated_data['run']
-        positions = Position.objects.filter(run=run)
+        positions = Position.objects.filter(run=run).order_by('date_time')
         if positions.count() > 0:
-            previous_position = Position.objects.latest('date_time')
+            previous_position = positions.last()
             distance_previous_to_current = geodesic([previous_position.latitude, previous_position.longitude],
                                                     [serializer.validated_data['latitude'],
                                                      serializer.validated_data['longitude']]).m
             previous_time = previous_position.date_time
             last_time = serializer.validated_data['date_time']
-            distance = previous_position.distance + Decimal(distance_previous_to_current)
+            distance = previous_position.distance + Decimal(str(distance_previous_to_current))
             time = (last_time - previous_time).total_seconds()
-            speed = distance_previous_to_current / time if time != 0 or distance != 0 else 0.00
+            speed = distance_previous_to_current / time if time != 0 else float(previous_position.speed)
+            speed = speed if distance != 0 else 0.00
         else:
-            distance, speed = 0, 0.00
+            distance, speed = Decimal(0.0000), 0.00
         serializer.save(distance=round(distance, 4), speed=round(speed, 2))
 
 
