@@ -53,14 +53,14 @@ class PositionViewSet(ModelViewSet):
             distance = previous_position.distance + Decimal(str(distance_previous_to_current))
             time = (last_time - previous_time).total_seconds()
             if time > 0 and distance_previous_to_current > 0:
-                speed = distance_previous_to_current / time
+                speed = Decimal(str(distance_previous_to_current / time))
             else:
-                speed = float(previous_position.speed) if previous_position.speed else 0.00
+                speed = Decimal(previous_position.speed) if previous_position.speed else Decimal('0.00')
 
             if distance == 0:
-                speed = 0.00
+                speed = Decimal('0.00')
         else:
-            distance, speed = Decimal(0.0000), 0.00
+            distance, speed = Decimal('0.0000'), Decimal('0.00')
         serializer.save(distance=round(distance, 4), speed=round(speed, 2))
 
 
