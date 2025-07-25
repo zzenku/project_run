@@ -81,7 +81,8 @@ class PositionSerializer(ModelSerializer):
 
     class Meta:
         model = Position
-        fields = ['run', 'latitude', 'longitude', 'date_time']
+        fields = ['run', 'latitude', 'longitude', 'date_time', 'speed', 'distance']
+        read_only_fields = ['distance', 'speed']
 
     def create(self, validated_data):
         athlete_position = [validated_data.get('latitude'), validated_data.get('longitude')]
