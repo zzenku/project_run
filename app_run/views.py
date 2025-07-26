@@ -61,7 +61,7 @@ class PositionViewSet(ModelViewSet):
                 speed = Decimal('0.00')
         else:
             distance, speed = Decimal('0.0000'), Decimal('0.00')
-        serializer.save(distance=distance.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP),
+        serializer.save(distance=(distance/1000).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP),
                         speed=speed.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
