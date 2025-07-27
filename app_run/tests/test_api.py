@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Case, When
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from geopy.distance import geodesic
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -24,11 +25,11 @@ class RunApiTestCase(APITestCase):
         self.run_3 = Run.objects.create(athlete=self.athlete_3, status='init')
         self.run_4 = Run.objects.create(athlete=self.athlete_3, status='in_progress')
         self.position_1 = Position.objects.create(run=self.run_4, latitude=0, longitude=0)
-        time.sleep(2)
+        # time.sleep(2)
         self.position_2 = Position.objects.create(run=self.run_4, latitude=1, longitude=1)
-        time.sleep(2)
+        # time.sleep(2)
         self.position_3 = Position.objects.create(run=self.run_4, latitude=2, longitude=2)
-        time.sleep(2)
+        # time.sleep(2)
         self.position_4 = Position.objects.create(run=self.run_4, latitude=3, longitude=3)
         self.athlete_2_info = AthleteInfo.objects.create(user_id=self.athlete_2, weight=0, goals='')
 
@@ -151,6 +152,27 @@ class RunApiTestCase(APITestCase):
     #     serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
     #     self.assertEqual(data, expected_data)
     #     self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+
+    def test_speed_distance(self):
+        athlete = User.objects.create_user(username='user', password='test1234')
+        run = Run.objects.create(athlete=athlete, status='in_progress')
+
+        url = reverse('position-list')  # Заменить на актуальный name из urls.py
+
+        for i in range(10):
+            data = {
+                'run': run.id,
+                'latitude': i,
+                'longitude': i,
+                'date_time': timezone.now().isoformat()
+            }
+            self.client.post(url, data, format='json')
+            time.sleep(0.5)
+
+        positions = Position.objects.filter(run=run).order_by('date_time')
+        for p in positions:
+            print(p.latitude, p.longitude, p.speed, p.distance)
 
 
 class ChallengeApiTestCase(APITestCase):

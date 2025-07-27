@@ -50,7 +50,7 @@ class PositionViewSet(ModelViewSet):
                                                      serializer.validated_data['longitude']]).m
             previous_time = previous_position.date_time
             last_time = serializer.validated_data['date_time']
-            distance = previous_position.distance + Decimal(str(distance_previous_to_current))
+            distance = previous_position.distance * 1000 + Decimal(str(distance_previous_to_current))
             time = (last_time - previous_time).total_seconds()
             if time > 0 and distance_previous_to_current > 0:
                 speed = Decimal(str(distance_previous_to_current / time))
