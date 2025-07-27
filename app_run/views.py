@@ -61,7 +61,7 @@ class PositionViewSet(ModelViewSet):
                 speed = Decimal('0.00')
         else:
             distance, speed = Decimal('0.0000'), Decimal('0.00')
-        serializer.save(distance=(distance/1000).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP),
+        serializer.save(distance=(distance / 1000).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP),
                         speed=speed.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
@@ -109,14 +109,25 @@ class RunStopView(APIView):
             run.save()
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
+
+            # ------------------------- Check Challenges -------------------------
+
             if finished_runs_data.get('id__count') == 10 and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='Сделай 10 Забегов!').exists():
                 Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
+
             if finished_runs_data.get('distance__sum') >= 50 and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
+
+            if (run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
+                    athete=run.athlete,
+                    full_name='2 километра за 10 минут!').exists():
+                Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
+
+            # -------------------------  Avg Speed -------------------------
             duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
             if duration['max_date'] and duration['min_date']:
                 run.run_time_seconds = int((duration['max_date'] - duration['min_date']).total_seconds())
