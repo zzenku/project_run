@@ -110,6 +110,18 @@ class RunStopView(APIView):
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
 
+            # -------------------------  Avg Speed -------------------------
+
+            duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
+            if duration['max_date'] and duration['min_date']:
+                run.run_time_seconds = int((duration['max_date'] - duration['min_date']).total_seconds())
+                avg_speed = Position.objects.filter(run=run).aggregate(avg_speed=Avg('speed'))['avg_speed']
+                run.speed = round(avg_speed, 2) if avg_speed else 0
+            else:
+                run.run_time_seconds = 0
+                run.speed = 0
+            run.save()
+
             # ------------------------- Check Challenges -------------------------
 
             if finished_runs_data.get('id__count') == 10 and not Challenge.objects.filter(
@@ -127,16 +139,6 @@ class RunStopView(APIView):
                     full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
 
-            # -------------------------  Avg Speed -------------------------
-            duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
-            if duration['max_date'] and duration['min_date']:
-                run.run_time_seconds = int((duration['max_date'] - duration['min_date']).total_seconds())
-                avg_speed = Position.objects.filter(run=run).aggregate(avg_speed=Avg('speed'))['avg_speed']
-                run.speed = round(avg_speed, 2) if avg_speed else 0
-            else:
-                run.run_time_seconds = 0
-                run.speed = 0
-            run.save()
             return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
