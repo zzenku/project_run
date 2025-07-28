@@ -115,7 +115,7 @@ class RunStopView(APIView):
 
             positions = Position.objects.filter(run=run).order_by('date_time')
             if positions.exists():
-                min_date, max_date = positions.first()['date_time'], positions.last()['date_time']
+                min_date, max_date = positions.first().date_time, positions.last().date_time
                 run.run_time_seconds = int((max_date-min_date).total_seconds())
                 avg_speed = positions.aggregate(avg_speed=Avg('speed'))['avg_speed']
                 run.speed = round(avg_speed, 2) if avg_speed else 0
