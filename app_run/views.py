@@ -105,8 +105,7 @@ class RunStopView(APIView):
         run = get_object_or_404(Run, id=run_id)
         if run.status == 'in_progress':
             run.status = 'finished'
-            last_position = Position.objects.filter(run=run).order_by('date_time').last()
-            run.distance = last_position.distance if last_position else 0
+            run.distance = calculate_distance(run)
             run.save()
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
