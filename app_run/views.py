@@ -136,7 +136,7 @@ class RunStopView(APIView):
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
 
             if (run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
-                    athete=run.athlete,
+                    athlete=run.athlete,
                     full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
 
