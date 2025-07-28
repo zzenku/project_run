@@ -2,7 +2,7 @@ import json
 import time
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When
+from django.db.models import Count, Case, When, Q
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -43,8 +43,7 @@ class RunApiTestCase(APITestCase):
 
     def test_get_search_user(self):
         url = reverse('user-list')
-        users = User.objects.filter(id__in=[self.athlete_1.id, self.athlete_3.id]).annotate(
-            runs_finished=Count(Case(When(run__status='finished', then=1))))
+        users = User.objects.all().annotate(runs_finished=Count('run', filter=Q(run__status='finished')))
         response = self.client.get(url, data={'search': 'Ivan'})
         serializer_data = UserSerializer(users, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)

@@ -105,17 +105,19 @@ class RunStopView(APIView):
         run = get_object_or_404(Run, id=run_id)
         if run.status == 'in_progress':
             run.status = 'finished'
-            run.distance = calculate_distance(run)
+            last_position = Position.objects.filter(run=run).order_by('date_time').last()
+            run.distance = last_position.distance if last_position else 0
             run.save()
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
 
             # -------------------------  Avg Speed -------------------------
 
-            duration = Position.objects.filter(run=run).aggregate(max_date=Max('date_time'), min_date=Min('date_time'))
-            if duration['max_date'] and duration['min_date']:
-                run.run_time_seconds = int((duration['max_date'] - duration['min_date']).total_seconds())
-                avg_speed = Position.objects.filter(run=run).aggregate(avg_speed=Avg('speed'))['avg_speed']
+            positions = Position.objects.filter(run=run).order_by('date_time')
+            if positions.exists():
+                min_date, max_date = positions.first()['date_time'], positions.last()['date_time']
+                run.run_time_seconds = int((max_date-min_date).total_seconds())
+                avg_speed = positions.aggregate(avg_speed=Avg('speed'))['avg_speed']
                 run.speed = round(avg_speed, 2) if avg_speed else 0
             else:
                 run.run_time_seconds = 0
