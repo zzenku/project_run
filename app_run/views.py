@@ -110,17 +110,18 @@ class RunStopView(APIView):
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
 
-            # -------------------------  Avg Speed -------------------------
+            # ------------------------- Calculate time and speed -------------------------
 
             positions = Position.objects.filter(run=run).order_by('date_time')
-            if positions.exists():
+            if positions.count() >= 2:
                 min_date, max_date = positions.first().date_time, positions.last().date_time
-                run.run_time_seconds = int((max_date-min_date).total_seconds())
+                run.run_time_seconds = int((max_date - min_date).total_seconds())
                 avg_speed = positions.aggregate(avg_speed=Avg('speed'))['avg_speed']
                 run.speed = round(avg_speed, 2) if avg_speed else 0
             else:
                 run.run_time_seconds = 0
                 run.speed = 0
+
             run.save()
 
             # ------------------------- Check Challenges -------------------------
@@ -135,7 +136,7 @@ class RunStopView(APIView):
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
 
-            if (run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
+            if (positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
