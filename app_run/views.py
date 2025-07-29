@@ -150,7 +150,7 @@ class RunStopView(APIView):
                     full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
 
-            return Response(status=status.HTTP_200_OK, data={'message': 'Забег завершён'})
+            return Response(RunSerializer(run).data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
