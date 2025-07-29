@@ -2,7 +2,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Sum, Max, Min, Q, Avg
+from django.db.models import Count, Sum, Q, Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from geopy.distance import geodesic
@@ -106,7 +106,6 @@ class RunStopView(APIView):
         if run.status == 'in_progress':
             run.status = 'finished'
             run.distance = calculate_distance(run)
-            run.save()
             finished_runs = Run.objects.filter(athlete=run.athlete, status='finished')
             finished_runs_data = finished_runs.aggregate(Count('id'), Sum('distance'))
 
@@ -136,7 +135,8 @@ class RunStopView(APIView):
                     full_name='Пробеги 50 километров!').exists():
                 Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
 
-            if (positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
+            if (
+                    positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
                     athlete=run.athlete,
                     full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
