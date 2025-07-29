@@ -19,7 +19,7 @@ class Run(models.Model):
     comment = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_INIT)
     distance = models.DecimalField(max_digits=20, decimal_places=4, default=0)
-    run_time_seconds = models.IntegerField(default=0),
+    run_time_seconds = models.IntegerField(default=0)
     speed = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):

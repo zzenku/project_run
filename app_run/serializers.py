@@ -55,7 +55,7 @@ class RunSerializer(ModelSerializer):
 
     class Meta:
         model = Run
-        fields = '__all__'
+        fields = ['created_at', 'athlete', 'comment', 'status', 'distance', 'run_time_seconds', 'speed']
 
 
 class AthleteInfoSerializer(ModelSerializer):
