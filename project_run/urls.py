@@ -35,6 +35,6 @@ urlpatterns = [
     path('api/challenges/', show_challenges, name='challenge-list'),
     path('api/collectible_item/', show_collectible_items),
     path('api/upload_file/', upload_collectible_items),
-    path('api/subscribe_to_coach/<int:id>/', SubscribeView),
+    path('api/subscribe_to_coach/<int:id>/', SubscribeView.as_view()),
     path('', include(router.urls)),
 ]
