@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from app_run.views import company_details_view, RunViewSet, UserViewSet, RunStartView, RunStopView, AthleteInfoView, \
-    show_challenges, PositionViewSet, show_collectible_items, upload_collectible_items
+    show_challenges, PositionViewSet, show_collectible_items, upload_collectible_items, SubscribeView
 
 router = DefaultRouter()
 router.register('api/runs', RunViewSet)
@@ -35,6 +35,6 @@ urlpatterns = [
     path('api/challenges/', show_challenges, name='challenge-list'),
     path('api/collectible_item/', show_collectible_items),
     path('api/upload_file/', upload_collectible_items),
-    path('api/subscribe_to_coach/<int:id>/', upload_collectible_items),
+    path('api/subscribe_to_coach/<int:id>/', SubscribeView),
     path('', include(router.urls)),
 ]

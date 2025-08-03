@@ -16,13 +16,26 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from app_run.distance import calculate_distance
-from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
+from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem, Subscribe
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
     PositionSerializer, CollectibleItemSerializer, AthleteDetailSerializer, CoachDetailSerializer
 
 
 class RunUserPagination(PageNumberPagination):
     page_size_query_param = 'size'
+
+
+class SubscribeView(APIView):
+    def post(self, request, *args, **kwargs):
+        athlete = User.objects.filter(id=request.data.get('athlete'), is_staff=False).first()
+        if not athlete:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        coach = get_object_or_404(User, id=self.kwargs.get('id'), is_staff=True)
+        if Subscribe.objects.filter(athlete=athlete, coach=coach).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        Subscribe.objects.create(athlete=athlete, coach=coach)
+        return Response(status=status.HTTP_200_OK)
+
 
 
 class RunViewSet(ModelViewSet):
