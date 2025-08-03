@@ -35,7 +35,7 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type']
+        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type', 'runs_finished']
 
     def get_type(self, obj):
         return 'coach' if obj.is_staff else 'athlete'
@@ -60,7 +60,7 @@ class AthleteDetailSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = UserSerializer.Meta.fields + ['items', 'runs_finished', 'coach']
+        fields = UserSerializer.Meta.fields + ['items', 'coach']
 
     def get_coach(self, obj):
         coach = obj.coach.first()
