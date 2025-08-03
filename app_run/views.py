@@ -18,7 +18,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
-    PositionSerializer, CollectibleItemSerializer, UserDetailSerializer
+    PositionSerializer, CollectibleItemSerializer, AthleteDetailSerializer, CoachDetailSerializer
 
 
 class RunUserPagination(PageNumberPagination):
@@ -77,16 +77,27 @@ class UserViewSet(ReadOnlyModelViewSet):
         if self.action == 'list':
             return UserSerializer
         elif self.action == 'retrieve':
-            return UserDetailSerializer
+            user_id = self.kwargs.get('pk')
+            user_type = User.objects.get(id=user_id).type
+            return CoachDetailSerializer if user_type == 'coach' else AthleteDetailSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
         qs = self.queryset
         type = self.request.query_params.get('type', None)
-        if type == 'coach':
-            qs = qs.filter(is_staff=1)
-        elif type == 'athlete':
-            qs = qs.filter(is_staff=0)
+        if self.action == 'list':
+            if type == 'coach':
+                qs = qs.filter(is_staff=1)
+            elif type == 'athlete':
+                qs = qs.filter(is_staff=0)
+            return qs.filter(is_superuser=False)
+        elif self.action == 'retrieve':
+            user_id = self.kwargs.get('pk')
+            user = get_object_or_404(User, id=user_id)
+            if user.is_staff:
+                qs = qs.prefetch_related('athletes__athlete')
+            else:
+                qs = qs.prefetch_related('coaches__coach')
         return qs.filter(is_superuser=False)
 
 
@@ -146,8 +157,8 @@ class RunStopView(APIView):
 
             if (
                     positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
-                    athlete=run.athlete,
-                    full_name='2 километра за 10 минут!').exists():
+                athlete=run.athlete,
+                full_name='2 километра за 10 минут!').exists():
                 Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
 
             return Response(RunSerializer(run).data, status=status.HTTP_200_OK)

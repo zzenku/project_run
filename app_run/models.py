@@ -63,3 +63,8 @@ class CollectibleItem(models.Model):
 
     def __str__(self):
         return f'{self.name}: lat - {self.latitude}, long - {self.longitude}'
+
+
+class Subscribe(models.Model):
+    athlete = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coaches')
+    coach = models.ForeignKey(User, on_delete=models.CASCADE, related_name='athletes')

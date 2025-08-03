@@ -4,7 +4,6 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
 
 
@@ -24,24 +23,48 @@ class CollectibleItemSerializer(ModelSerializer):
         return value
 
 
+class UserIdSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id']
+
+
 class UserSerializer(ModelSerializer):
     type = SerializerMethodField()
     runs_finished = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type', 'runs_finished']
+        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type']
 
     def get_type(self, obj):
         return 'coach' if obj.is_staff else 'athlete'
 
 
-class UserDetailSerializer(UserSerializer):
-    items = CollectibleItemSerializer(read_only=True, many=True)
+class CoachDetailSerializer(UserSerializer):
+    athletes = SerializerMethodField()
 
     class Meta:
         model = User
-        fields = UserSerializer.Meta.fields + ['items']
+        fields = UserSerializer.Meta.fields + ['athletes']
+
+    def get_athletes(self, obj):
+        subscribes = obj.athletes.all()
+        athletes = [s.athlete for s in subscribes]
+        return UserIdSerializer(athletes, many=True).data
+
+
+class AthleteDetailSerializer(UserSerializer):
+    items = CollectibleItemSerializer(read_only=True, many=True)
+    coach = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = UserSerializer.Meta.fields + ['items', 'runs_finished', 'coach']
+
+    def get_coach(self, obj):
+        coach = obj.coach.first()
+        return UserIdSerializer(coach, many=True).data if coach else None
 
 
 class AthleteSerializer(ModelSerializer):
@@ -55,7 +78,8 @@ class RunSerializer(ModelSerializer):
 
     class Meta:
         model = Run
-        fields = ['id','created_at', 'athlete', 'comment', 'status', 'distance', 'run_time_seconds', 'speed', 'athlete_data']
+        fields = ['id', 'created_at', 'athlete', 'comment', 'status', 'distance', 'run_time_seconds', 'speed',
+                  'athlete_data']
 
 
 class AthleteInfoSerializer(ModelSerializer):
