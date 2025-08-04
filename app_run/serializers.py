@@ -63,7 +63,7 @@ class AthleteDetailSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ['items', 'coach']
 
     def get_coach(self, obj):
-        coach = obj.coach.first()
+        coach = obj.coaches.first()
         return UserIdSerializer(coach).data if coach else None
 
 
