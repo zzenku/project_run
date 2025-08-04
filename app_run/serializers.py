@@ -57,8 +57,8 @@ class AthleteDetailSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ['items', 'coach']
 
     def get_coach(self, obj):
-        coach = obj.coaches.last()
-        return coach.id if coach else None
+        subscribe = obj.coaches.last()
+        return subscribe.coach.id if subscribe else None
 
 
 class AthleteSerializer(ModelSerializer):
