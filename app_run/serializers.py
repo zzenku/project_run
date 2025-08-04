@@ -23,12 +23,6 @@ class CollectibleItemSerializer(ModelSerializer):
         return value
 
 
-class UserIdSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id']
-
-
 class UserSerializer(ModelSerializer):
     type = SerializerMethodField()
     runs_finished = serializers.IntegerField(read_only=True)
@@ -50,8 +44,8 @@ class CoachDetailSerializer(UserSerializer):
 
     def get_athletes(self, obj):
         subscribes = obj.athletes.all()
-        athletes = [s.athlete for s in subscribes]
-        return UserIdSerializer(athletes, many=True).data
+        athletes = [s.athlete.id for s in subscribes]
+        return athletes
 
 
 class AthleteDetailSerializer(UserSerializer):
@@ -64,7 +58,7 @@ class AthleteDetailSerializer(UserSerializer):
 
     def get_coach(self, obj):
         coach = obj.coaches.first()
-        return UserIdSerializer(coach).data if coach else None
+        return coach.id if coach else None
 
 
 class AthleteSerializer(ModelSerializer):
