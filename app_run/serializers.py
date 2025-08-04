@@ -64,7 +64,7 @@ class AthleteDetailSerializer(UserSerializer):
 
     def get_coach(self, obj):
         coach = obj.coach.first()
-        return UserIdSerializer(coach, many=True).data if coach else None
+        return UserIdSerializer(coach).data if coach else None
 
 
 class AthleteSerializer(ModelSerializer):
