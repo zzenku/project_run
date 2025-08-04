@@ -27,10 +27,10 @@ class RunUserPagination(PageNumberPagination):
 
 class SubscribeView(APIView):
     def post(self, request, *args, **kwargs):
-        athlete = User.objects.filter(id=request.data.get('athlete'), is_staff=False).first()
+        athlete = User.objects.filter(id=request.data.get('athlete'), is_staff=False, is_superuser=False).first()
         if not athlete:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        coach = User.objects.get(id=self.kwargs.get('id'))
+        coach = User.objects.get(id=self.kwargs.get('id'), is_superuser=False)
 
         if not coach.is_staff:
             return Response(status=status.HTTP_400_BAD_REQUEST)
