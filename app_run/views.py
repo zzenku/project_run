@@ -94,9 +94,8 @@ class UserViewSet(ReadOnlyModelViewSet):
         if self.action == 'list':
             return UserSerializer
         elif self.action == 'retrieve':
-            user_id = self.kwargs.get('pk')
-            user_type = User.objects.get(id=user_id).type
-            return CoachDetailSerializer if user_type == 'coach' else AthleteDetailSerializer
+            user = User.objects.filter(id=self.kwargs.get('pk'), is_staff=False).first()
+            return AthleteDetailSerializer if user else CoachDetailSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
