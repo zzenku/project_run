@@ -32,7 +32,7 @@ class SubscribeView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
 
-        if not coach.is_staff or not coach:
+        if not coach or not coach.is_staff:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if Subscribe.objects.filter(athlete=athlete, coach=coach).exists():
