@@ -94,6 +94,17 @@ class ChallengeSerializer(ModelSerializer):
         fields = ['full_name', 'athlete']
 
 
+class AthleteChallengeSerializer(ModelSerializer):
+    full_name = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'username']
+
+    def get_full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'
+
+
 class PositionSerializer(ModelSerializer):
     date_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M:%S.%f')
 

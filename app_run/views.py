@@ -18,11 +18,33 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem, Subscribe
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
-    PositionSerializer, CollectibleItemSerializer, AthleteDetailSerializer, CoachDetailSerializer
+    PositionSerializer, CollectibleItemSerializer, AthleteDetailSerializer, CoachDetailSerializer, \
+    AthleteChallengeSerializer
 
 
 class RunUserPagination(PageNumberPagination):
     page_size_query_param = 'size'
+
+
+class ChallengeSummaryView(APIView):
+    def get(self, request, *args, **kwargs):
+        challenges = Challenge.objects.select_related('athlete').all().order_by('full_name')
+        challenge_athletes = {}
+        for challenge in challenges:
+            if challenge.full_name not in challenge_athletes:
+                challenge_athletes[challenge.full_name] = []
+            challenge_athletes[challenge.full_name].append(challenge.athlete)
+
+        answer = []
+
+        for challenge, athletes in challenge_athletes.items():
+            data = {
+                'name_to_display': challenge,
+                'athletes': AthleteChallengeSerializer(athletes, many=True).data
+            }
+            answer.append(data)
+
+        return Response(status=status.HTTP_200_OK, data=answer)
 
 
 class SubscribeView(APIView):

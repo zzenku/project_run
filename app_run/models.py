@@ -33,7 +33,13 @@ class AthleteInfo(models.Model):
 
 
 class Challenge(models.Model):
-    full_name = models.CharField(max_length=255, blank=False, null=False)
+    CHALLENGE_CHOICES = [
+        ('Сделай 10 Забегов!', 'Сделай 10 Забегов!'),
+        ('Пробеги 50 километров!', 'Пробеги 50 километров!'),
+        ('2 километра за 10 минут!', '2 километра за 10 минут!'),
+    ]
+
+    full_name = models.CharField(max_length=255, choices=CHALLENGE_CHOICES, blank=False, null=False)
     athlete = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
