@@ -185,19 +185,19 @@ class RunStopView(APIView):
 
             if finished_runs_data.get('id__count') == 10 and not Challenge.objects.filter(
                     athlete=run.athlete,
-                    full_name='Сделай 10 Забегов!').exists():
-                Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=run.athlete)
+                    full_name=Challenge.CHALLENGE_10_RUNS).exists():
+                Challenge.objects.create(full_name=Challenge.CHALLENGE_10_RUNS, athlete=run.athlete)
 
             if finished_runs_data.get('distance__sum') >= 50 and not Challenge.objects.filter(
                     athlete=run.athlete,
-                    full_name='Пробеги 50 километров!').exists():
-                Challenge.objects.create(full_name='Пробеги 50 километров!', athlete=run.athlete)
+                    full_name=Challenge.CHALLENGE_50KM).exists():
+                Challenge.objects.create(full_name=Challenge.CHALLENGE_50KM, athlete=run.athlete)
 
             if (
                     positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
-                athlete=run.athlete,
-                full_name='2 километра за 10 минут!').exists():
-                Challenge.objects.create(full_name='2 километра за 10 минут!', athlete=run.athlete)
+                    athlete=run.athlete,
+                    full_name=Challenge.CHALLENGE_2KM_10MIN).exists():
+                Challenge.objects.create(full_name=Challenge.CHALLENGE_2KM_10MIN, athlete=run.athlete)
 
             return Response(RunSerializer(run).data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)

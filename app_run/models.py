@@ -33,10 +33,14 @@ class AthleteInfo(models.Model):
 
 
 class Challenge(models.Model):
+    CHALLENGE_10_RUNS = 'Сделай 10 Забегов!'
+    CHALLENGE_50KM = 'Пробеги 50 километров!'
+    CHALLENGE_2KM_10MIN = '2 километра за 10 минут!'
+
     CHALLENGE_CHOICES = [
-        ('Сделай 10 Забегов!', 'Сделай 10 Забегов!'),
-        ('Пробеги 50 километров!', 'Пробеги 50 километров!'),
-        ('2 километра за 10 минут!', '2 километра за 10 минут!'),
+        (CHALLENGE_10_RUNS, CHALLENGE_10_RUNS),
+        (CHALLENGE_50KM, CHALLENGE_50KM),
+        (CHALLENGE_2KM_10MIN, CHALLENGE_2KM_10MIN),
     ]
 
     full_name = models.CharField(max_length=255, choices=CHALLENGE_CHOICES, blank=False, null=False)
