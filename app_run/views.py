@@ -259,7 +259,7 @@ def show_challenges(request):
     challenges = Challenge.objects.all()
     athlete = request.GET.get('athlete')
     if athlete:
-        challenges = challenges.filter(athlete=athlete)
+        challenges = challenges.filter(athlete__id=int(athlete))
     serializer_data = ChallengeSerializer(challenges, many=True).data
     return Response(serializer_data)
 
