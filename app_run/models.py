@@ -23,7 +23,7 @@ class Run(models.Model):
     speed = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f'Забег {self.id}: {self.status}'
+        return f'Забег {self.id}, {self.athlete}: {self.status}'
 
 
 class AthleteInfo(models.Model):
