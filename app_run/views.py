@@ -34,7 +34,7 @@ class AnalyticsForCoachView(APIView):
         if not coach.is_staff:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        analytics = Run.objects.filter(athlete__coaches_coach=coach.id).values('athlete').annotate(
+        analytics = Run.objects.filter(athlete__coaches__coach=coach.id).values('athlete').annotate(
             avg_speed=Avg('speed'),
             total_distance=Sum('distance'),
             max_distance=Max('distance'))
