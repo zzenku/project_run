@@ -144,6 +144,8 @@ class SubscribeSerializer(ModelSerializer):
         fields = ['coach', 'athlete', 'rating']
 
     def validate_rate(self, value):
-        if 1 <= value <= 5:
-            return value
-        return serializers.ValidationError('Недопустимое значение для рейтинга (1-5)')
+        if value is None:
+            return serializers.ValidationError('Поле рейтинг обязательно')
+        if not (1 <= value <= 5):
+            return serializers.ValidationError('Недопустимое значение для рейтинга (1-5)')
+        return value

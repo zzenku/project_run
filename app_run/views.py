@@ -47,6 +47,7 @@ class RateCoachView(APIView):
                 subscription.rating = rating
                 subscription.save()
                 return Response({'rating': subscription.rating}, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Некорректное значение'})
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Пользователь не подписан на этого тренера'})
 
 
