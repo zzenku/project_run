@@ -41,14 +41,17 @@ class RateCoachView(APIView):
         if subscription:
             if 'rating' not in request.data:
                 return Response({'error': 'Поле rating обязательно'}, status=status.HTTP_400_BAD_REQUEST)
-            rating = request.data.get('rating')
+            try:
+                rating = int(request.data.get('rating'))
+            except (ValueError, TypeError):
+                return Response({'error': 'Рейтинг должен быть числом'}, status=status.HTTP_400_BAD_REQUEST)
             serializer = SubscribeSerializer(data={'coach': coach.id, 'athlete': athlete.id, 'rating': rating})
             if serializer.is_valid():
                 subscription.rating = rating
                 subscription.save()
                 return Response({'rating': subscription.rating}, status=status.HTTP_200_OK)
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Некорректное значение'})
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Пользователь не подписан на этого тренера'})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Пользователь не подписан на этого тренера'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChallengeSummaryView(APIView):
