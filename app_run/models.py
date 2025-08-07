@@ -76,5 +76,12 @@ class CollectibleItem(models.Model):
 
 
 class Subscribe(models.Model):
+    CHOICES_RATE = [(1, 1),
+                    (2, 2),
+                    (3, 3),
+                    (4, 4),
+                    (5, 5)]
+
     athlete = models.ForeignKey(User, on_delete=models.CASCADE, related_name='coaches')
+    rating = models.PositiveSmallIntegerField(null=True, choices=CHOICES_RATE, default=None)
     coach = models.ForeignKey(User, on_delete=models.CASCADE, related_name='athletes')

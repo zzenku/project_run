@@ -19,11 +19,35 @@ from app_run.distance import calculate_distance
 from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem, Subscribe
 from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerializer, ChallengeSerializer, \
     PositionSerializer, CollectibleItemSerializer, AthleteDetailSerializer, CoachDetailSerializer, \
-    AthleteChallengeSerializer
+    AthleteChallengeSerializer, SubscribeSerializer
 
 
 class RunUserPagination(PageNumberPagination):
     page_size_query_param = 'size'
+
+
+class RateCoachView(APIView):
+    def post(self, request, *args, **kwargs):
+        athlete = User.objects.filter(id=request.data.get('athlete'), is_staff=False, is_superuser=False).first()
+        if not athlete:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
+        if not coach:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if not coach.is_staff:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        subscription = Subscribe.objects.filter(athlete=athlete, coach=coach).first()
+        if subscription:
+            if 'rating' not in request.data:
+                return Response({'error': 'Поле rating обязательно'}, status=status.HTTP_400_BAD_REQUEST)
+            rating = request.data.get('rating')
+            serializer = SubscribeSerializer(data={'coach': coach.id, 'athlete': athlete.id, 'rating': rating})
+            if serializer.is_valid():
+                subscription.rating = rating
+                subscription.save()
+                return Response({'rating': subscription.rating}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Пользователь не подписан на этого тренера'})
 
 
 class ChallengeSummaryView(APIView):
@@ -125,7 +149,7 @@ class UserViewSet(ReadOnlyModelViewSet):
         type = self.request.query_params.get('type', None)
         if self.action == 'list':
             if type == 'coach':
-                qs = qs.filter(is_staff=1)
+                qs = qs.filter(is_staff=1).annotate(rating=Avg('athletes__rating'))
             elif type == 'athlete':
                 qs = qs.filter(is_staff=0)
             return qs.filter(is_superuser=False)
@@ -133,7 +157,7 @@ class UserViewSet(ReadOnlyModelViewSet):
             user_id = self.kwargs.get('pk')
             user = get_object_or_404(User, id=user_id)
             if user.is_staff:
-                qs = qs.prefetch_related('athletes__athlete')
+                qs = qs.prefetch_related('athletes__athlete').annotate(rating=Avg('athletes__rating'))
             else:
                 qs = qs.prefetch_related('coaches__coach')
         return qs.filter(is_superuser=False)
@@ -174,11 +198,9 @@ class RunStopView(APIView):
                     avg_speed = positions.aggregate(avg_speed=Avg('speed'))['avg_speed']
                     run.speed = round(avg_speed, 2) if avg_speed else 0
                 else:
-                    run.run_time_seconds = 0
-                    run.speed = 0
+                    run.run_time_seconds, run.speed = 0, 0
             else:
-                run.run_time_seconds = 0
-                run.speed = 0
+                run.run_time_seconds, run.speed = 0, 0
 
             run.save()
 
@@ -196,8 +218,8 @@ class RunStopView(APIView):
 
             if (
                     positions.count() >= 2 and run.run_time_seconds <= 600 and run.distance >= 2) and not Challenge.objects.filter(
-                    athlete=run.athlete,
-                    full_name=Challenge.CHALLENGE_2KM_10MIN).exists():
+                athlete=run.athlete,
+                full_name=Challenge.CHALLENGE_2KM_10MIN).exists():
                 Challenge.objects.create(full_name=Challenge.CHALLENGE_2KM_10MIN, athlete=run.athlete)
 
             return Response(RunSerializer(run).data, status=status.HTTP_200_OK)

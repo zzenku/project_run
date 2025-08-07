@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
+from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem, Subscribe
 
 
 class CollectibleItemSerializer(ModelSerializer):
@@ -26,10 +26,11 @@ class CollectibleItemSerializer(ModelSerializer):
 class UserSerializer(ModelSerializer):
     type = SerializerMethodField()
     runs_finished = serializers.IntegerField(read_only=True)
+    rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type', 'runs_finished']
+        fields = ['id', 'date_joined', 'username', 'last_name', 'first_name', 'type', 'runs_finished', 'rating']
 
     def get_type(self, obj):
         return 'coach' if obj.is_staff else 'athlete'
@@ -135,3 +136,14 @@ class PositionSerializer(ModelSerializer):
         if not (-180 <= value <= 180):
             raise serializers.ValidationError('Недопустимое значение долготы')
         return value
+
+
+class SubscribeSerializer(ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = ['coach', 'athlete', 'rating']
+
+    def validate_rate(self, value):
+        if 1 <= value <= 5:
+            return value
+        return serializers.ValidationError('Недопустимое значение для рейтинга (1-5)')
