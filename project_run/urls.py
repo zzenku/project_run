@@ -20,7 +20,7 @@ from rest_framework.routers import DefaultRouter
 
 from app_run.views import company_details_view, RunViewSet, UserViewSet, RunStartView, RunStopView, AthleteInfoView, \
     show_challenges, PositionViewSet, show_collectible_items, upload_collectible_items, SubscribeView, \
-    ChallengeSummaryView, RateCoachView
+    ChallengeSummaryView, RateCoachView, AnalyticsForCoachView
 
 router = DefaultRouter()
 router.register('api/runs', RunViewSet)
@@ -39,5 +39,6 @@ urlpatterns = [
     path('api/subscribe_to_coach/<int:id>/', SubscribeView.as_view()),
     path('api/challenges_summary/', ChallengeSummaryView.as_view()),
     path('api/rate_coach/<int:id>/', RateCoachView.as_view()),
+    path('api/analytics_for_coach/<int:id>/', AnalyticsForCoachView.as_view()),
     path('', include(router.urls)),
 ]

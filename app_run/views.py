@@ -2,7 +2,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Sum, Q, Avg
+from django.db.models import Count, Sum, Q, Avg, Max
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from geopy.distance import geodesic
@@ -24,6 +24,51 @@ from app_run.serializers import RunSerializer, UserSerializer, AthleteInfoSerial
 
 class RunUserPagination(PageNumberPagination):
     page_size_query_param = 'size'
+
+
+class AnalyticsForCoachView(APIView):
+    def get(self, request, *args, **kwargs):
+        coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
+        if not coach:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if not coach.is_staff:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        analytics = Run.objects.filter(athlete__coach=coach.id).values('athlete').annotate(
+            avg_speed=Avg('speed'),
+            total_distance=Sum('distance'),
+            max_distance=Max('distance'))
+
+        total_run_value, total_run_user = 0, 0
+        speed_avg_value, speed_avg_user = 0, 0
+        longest_run_user, longest_run_value = 0, 0
+
+        for athlete in analytics:
+            if athlete['max_distance'] > longest_run_value:
+                longest_run_value = athlete['max_distance']
+                longest_run_user = athlete['athlete']
+
+            if athlete['avg_speed'] > speed_avg_value:
+                speed_avg_value = athlete['avg_speed']
+                speed_avg_user = athlete['athlete']
+
+            if athlete['total_distance'] > total_run_value:
+                total_run_value = athlete['total_distance']
+                total_run_user = athlete['athlete']
+
+        return Response({
+            'longest_run_user': longest_run_user,
+
+            'longest_run_value': longest_run_value,
+
+            'total_run_user': total_run_user,
+
+            'total_run_value': total_run_value,
+
+            'speed_avg_user': speed_avg_user,
+
+            'speed_avg_value': speed_avg_value
+        }, status=status.HTTP_200_OK)
 
 
 class RateCoachView(APIView):
