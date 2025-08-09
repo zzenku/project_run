@@ -1,8 +1,9 @@
 import json
 import time
+from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When, Q
+from django.db.models import Count, Q
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -11,8 +12,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app_run.distance import calculate_distance
-from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem
-from app_run.serializers import RunSerializer, UserSerializer, ChallengeSerializer
+from app_run.models import Run, AthleteInfo, Challenge, Position, CollectibleItem, Subscribe
+from app_run.serializers import RunSerializer, UserSerializer, ChallengeSerializer, AthleteInfoSerializer
 
 
 class RunApiTestCase(APITestCase):
@@ -24,13 +25,14 @@ class RunApiTestCase(APITestCase):
         self.run_2 = Run.objects.create(athlete=self.athlete_2, status='in_progress')
         self.run_3 = Run.objects.create(athlete=self.athlete_3, status='init')
         self.run_4 = Run.objects.create(athlete=self.athlete_3, status='in_progress')
-        self.position_1 = Position.objects.create(run=self.run_4, latitude=0, longitude=0)
-        # time.sleep(2)
-        self.position_2 = Position.objects.create(run=self.run_4, latitude=1, longitude=1)
-        # time.sleep(2)
-        self.position_3 = Position.objects.create(run=self.run_4, latitude=2, longitude=2)
-        # time.sleep(2)
-        self.position_4 = Position.objects.create(run=self.run_4, latitude=3, longitude=3)
+        self.position_1 = Position.objects.create(run=self.run_4, latitude=0, longitude=0,
+                                                  date_time='2025-08-08T14:05:00.00')
+        self.position_2 = Position.objects.create(run=self.run_4, latitude=1, longitude=1,
+                                                  date_time='2025-08-08T14:05:01.00')
+        self.position_3 = Position.objects.create(run=self.run_4, latitude=2, longitude=2,
+                                                  date_time='2025-08-08T14:05:02.00')
+        self.position_4 = Position.objects.create(run=self.run_4, latitude=3, longitude=3,
+                                                  date_time='2025-08-08T14:05:03.00')
         self.athlete_2_info = AthleteInfo.objects.create(user_id=self.athlete_2, weight=0, goals='')
 
     def test_get_runs(self):
@@ -45,7 +47,7 @@ class RunApiTestCase(APITestCase):
         url = reverse('user-list')
         users = User.objects.all().annotate(runs_finished=Count('run', filter=Q(run__status='finished')))
         response = self.client.get(url, data={'search': 'Ivan'})
-        serializer_data = UserSerializer(users, many=True).data
+        serializer_data = UserSerializer([users.get(pk=1), users.get(pk=3)], many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
 
@@ -90,74 +92,51 @@ class RunApiTestCase(APITestCase):
         response = self.client.post(url, content_type='application/json')
         self.run_4.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertTrue(5 <= self.run_4.run_time_seconds <= 7)
+        self.assertTrue(3 <= self.run_4.run_time_seconds <= 5)
 
-    # def test_get_athlete_info_created(self):
-    #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
-    #     response = self.client.get(url)
-    #     self.assertEqual(status.HTTP_200_OK, response.status_code)
-    #
-    # def test_get_athlete_info_not_created(self):
-    #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_1.id})
-    #     response = self.client.get(url)
-    #     self.assertEqual(status.HTTP_200, response.status_code)
-    #
-    # def test_put_athlete_info_created(self):
-    #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
-    #     data = {
-    #         'weight': 80,
-    #         'goals': 'Хочу быть сильным'
-    #     }
-    #     json_data = json.dumps(data)
-    #     response = self.client.put(url, data=json_data, content_type='application/json')
-    #     self.athlete_2_info.refresh_from_db()
-    #     expected_data = {
-    #         'weight': self.athlete_2_info.weight,
-    #         'goals': self.athlete_2_info.goals
-    #     }
-    #     serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
-    #     self.assertEqual(data, expected_data)
-    #     self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-    #
-    # def test_put_athlete_info_not_created(self):
-    #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_1.id})
-    #     data = {
-    #         'weight': 80,
-    #         'goals': 'Хочу быть сильным'
-    #     }
-    #     json_data = json.dumps(data)
-    #     response = self.client.put(url, data=json_data, content_type='application/json')
-    #     info = AthleteInfo.objects.get(user_id=self.athlete_1.id)
-    #     expected_data = {
-    #         'weight': info.weight,
-    #         'goals': info.goals
-    #     }
-    #     self.assertEqual(data, expected_data)
-    #     self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-    #
-    # def test_weight_type_error(self):
-    #     url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
-    #     data = {
-    #         'weight': 'abc',
-    #         'goals': 'Хочу быть сильным'
-    #     }
-    #     json_data = json.dumps(data)
-    #     response = self.client.put(url, data=json_data, content_type='application/json')
-    #     self.athlete_2_info.refresh_from_db()
-    #     expected_data = {
-    #         'weight': self.athlete_2_info.weight,
-    #         'goals': self.athlete_2_info.goals
-    #     }
-    #     serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
-    #     self.assertEqual(data, expected_data)
-    #     self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+    def test_get_athlete_info_created(self):
+        url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
 
+    def test_get_athlete_info_not_created(self):
+        url = reverse('athlete-info', kwargs={'user_id': self.athlete_1.id})
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+    def test_put_athlete_info_created(self):
+        url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
+        data = {
+            'weight': 80,
+            'goals': 'Хочу быть сильным'
+        }
+        json_data = json.dumps(data)
+        response = self.client.put(url, data=json_data, content_type='application/json')
+        self.athlete_2_info.refresh_from_db()
+        serializer_data = AthleteInfoSerializer(self.athlete_2_info).data
+        data['user_id'] = self.athlete_2.id
+        self.assertEqual(data, serializer_data)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+    def test_weight_type_error(self):
+        url = reverse('athlete-info', kwargs={'user_id': self.athlete_2.id})
+        data = {
+            'weight': 'abc',
+            'goals': 'Хочу быть сильным'
+        }
+        json_data = json.dumps(data)
+        response = self.client.put(url, data=json_data, content_type='application/json')
+        self.athlete_2_info.refresh_from_db()
+
+        serializer = AthleteInfoSerializer(self.athlete_2_info)
+        self.assertNotEqual(data, serializer.data)
+        self.assertNotEqual(status.HTTP_201_CREATED, response.status_code)
 
     def test_speed_distance(self):
         athlete = User.objects.create_user(username='user', password='test1234')
         run = Run.objects.create(athlete=athlete, status='in_progress')
 
-        url = reverse('position-list')  # Заменить на актуальный name из urls.py
+        url = reverse('position-list')
 
         for i in range(10):
             data = {
@@ -166,12 +145,19 @@ class RunApiTestCase(APITestCase):
                 'longitude': i,
                 'date_time': timezone.now().isoformat()
             }
-            self.client.post(url, data, format='json')
-            time.sleep(0.5)
+            response = self.client.post(url, data, content_type='application/json')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            time.sleep(0.01)
 
         positions = Position.objects.filter(run=run).order_by('date_time')
+        self.assertEqual(positions.count(), 10)
+
         for p in positions:
-            print(p.latitude, p.longitude, p.speed, p.distance)
+            # print(f"Lat: {p.latitude}, Lon: {p.longitude}, Speed: {p.speed}, Distance: {p.distance}")
+            self.assertIsNotNone(p.speed)
+            self.assertIsNotNone(p.distance)
+            self.assertIsInstance(p.speed, Decimal)
+            self.assertIsInstance(p.distance, Decimal)
 
 
 class ChallengeApiTestCase(APITestCase):
@@ -182,6 +168,8 @@ class ChallengeApiTestCase(APITestCase):
         for _ in range(9):
             Run.objects.create(athlete=self.athlete, status='finished', distance=5)
         self.run_10 = Run.objects.create(athlete=self.athlete, status='in_progress', distance=5)
+        Position.objects.create(run=self.run_10, latitude=0, longitude=0)
+        Position.objects.create(run=self.run_10, latitude=0, longitude=0.05)
         self.challenge_2 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_2)
         self.challenge_3 = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete_3)
 
@@ -199,7 +187,8 @@ class ChallengeApiTestCase(APITestCase):
         self.run_10.refresh_from_db()
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual('finished', self.run_10.status)
-        self.assertTrue(Challenge.objects.filter(athlete=self.athlete, full_name='Пробеги 50 километров!').exists())
+        self.run_10.refresh_from_db()
+        self.assertTrue(Challenge.objects.filter(athlete=self.athlete, full_name=Challenge.CHALLENGE_50KM).exists())
 
     def test_get_challenges(self):
         url = reverse('challenge-list')
@@ -234,13 +223,94 @@ class PositionCollectibleTestCase(TestCase):
                                               picture='https://info.traceparts.com/wp-content/uploads/2024/01/item-logo-without-background-2.png',
                                               value=2)
         run = Run.objects.create(athlete=athlete, status='in_progress')
-        test_pos_1 = Position.objects.create(run=run, latitude=10, longitude=10)
-        test_pos_2 = Position.objects.create(run=run, latitude=12, longitude=12)
-        test_pos_3 = Position.objects.create(run=run, latitude=14, longitude=14)
         url = reverse('position-list')
-        data = {'run': run.id, 'latitude': 20, 'longitude': 20}
+        data = {'run': run.id, 'latitude': 20, 'longitude': 20, 'date_time': '2025-08-08T14:05:03.00'}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data, content_type='application/json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(athlete.items.last(), item)
 
+
+class ExtraApiTestCase(APITestCase):
+    def setUp(self):
+        self.coach = User.objects.create(username='coach', is_staff=True)
+        self.athlete = User.objects.create(username='athlete')
+        self.other_athlete = User.objects.create(username='athlete2')
+
+        self.subscription = Subscribe.objects.create(coach=self.coach, athlete=self.athlete, rating=5)
+
+        self.run1 = Run.objects.create(athlete=self.athlete, status='finished', distance=5, speed=10)
+        self.run2 = Run.objects.create(athlete=self.athlete, status='finished', distance=15, speed=8)
+
+        self.item = CollectibleItem.objects.create(
+            name='Test Item', uid='abc123', value=10, latitude=0, longitude=0, picture='test.png'
+        )
+
+        self.challenge = Challenge.objects.create(full_name='Сделай 10 Забегов!', athlete=self.athlete)
+
+    def test_analytics_for_coach_success(self):
+        url = reverse('analytics-coach', kwargs={'id': self.coach.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('longest_run_user', response.data)
+
+    def test_analytics_for_coach_not_found(self):
+        url = reverse('analytics-coach', kwargs={'id': 9999})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_rate_coach_success(self):
+        url = reverse('rate-coach', kwargs={'id': self.coach.id})
+        data = {'athlete': self.athlete.id, 'rating': 4}
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.subscription.refresh_from_db()
+        self.assertEqual(self.subscription.rating, 4)
+
+    def test_rate_coach_not_subscribed(self):
+        url = reverse('rate-coach', kwargs={'id': self.coach.id})
+        data = {'athlete': self.other_athlete.id, 'rating': 5}
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_challenge_summary(self):
+        url = reverse('challenge-summary')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(any('athletes' in c for c in response.data))
+
+    def test_subscribe_success(self):
+        new_athlete = User.objects.create(username='new_athlete')
+        url = reverse('subscribe', kwargs={'id': self.coach.id})
+        data = {'athlete': new_athlete.id}
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Subscribe.objects.filter(athlete=new_athlete, coach=self.coach).exists())
+
+    def test_subscribe_already_exists(self):
+        url = reverse('subscribe', kwargs={'id': self.coach.id})
+        data = {'athlete': self.athlete.id}
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_users_by_type(self):
+        url = reverse('user-list')
+        response = self.client.get(url, {'type': 'coach'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(all(u['type'] == 'coach' for u in response.data))
+
+    def test_show_collectible_items(self):
+        url = reverse('show-collectible-items')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(response.data), 1)
+
+    def test_show_challenges_filter_by_athlete(self):
+        url = reverse('challenge-list')
+        response = self.client.get(url, {'athlete': self.athlete.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(all(c['athlete'] == self.athlete.id for c in response.data))

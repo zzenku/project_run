@@ -26,13 +26,21 @@ class RunUserPagination(PageNumberPagination):
     page_size_query_param = 'size'
 
 
+def validate_coach(user):
+    if not user:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if not user.is_staff:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    return None
+
+
 class AnalyticsForCoachView(APIView):
     def get(self, request, *args, **kwargs):
         coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
-        if not coach:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if not coach.is_staff:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        error_response = validate_coach(coach)
+        if error_response:
+            return error_response
 
         analytics = Run.objects.filter(athlete__coaches__coach=coach.id).values('athlete').annotate(
             avg_speed=Avg('speed'),
@@ -58,15 +66,10 @@ class AnalyticsForCoachView(APIView):
 
         return Response({
             'longest_run_user': longest_run_user,
-
             'longest_run_value': longest_run_value,
-
             'total_run_user': total_run_user,
-
             'total_run_value': total_run_value,
-
             'speed_avg_user': speed_avg_user,
-
             'speed_avg_value': speed_avg_value
         }, status=status.HTTP_200_OK)
 
@@ -77,10 +80,9 @@ class RateCoachView(APIView):
         if not athlete:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
-        if not coach:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if not coach.is_staff:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        error_response = validate_coach(coach)
+        if error_response:
+            return error_response
 
         subscription = Subscribe.objects.filter(athlete=athlete, coach=coach).first()
         if subscription:
@@ -126,10 +128,9 @@ class SubscribeView(APIView):
         if not athlete:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         coach = User.objects.filter(id=self.kwargs.get('id'), is_superuser=False).first()
-        if not coach:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if not coach.is_staff:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        error_response = validate_coach(coach)
+        if error_response:
+            return error_response
 
         if Subscribe.objects.filter(athlete=athlete, coach=coach).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
